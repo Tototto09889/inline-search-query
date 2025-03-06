@@ -1,10 +1,10 @@
-const telegramAPIToken = "GANTI_DENGAN_API_TOKEN_BOT_ANDA"; // Ganti dengan API token bot Anda
+const telegramAPIToken = "7680446501:AAFwSWuv8tdDHdpm35KEH5O-aDvWFEiqRd0"; // Ganti dengan API token bot Anda
 const telegramAPIURL = "https://api.telegram.org/bot" + telegramAPIToken;
-const telegramAdminID = "GANTI_DENGAN_ID_USER_ADMIN_BOT_ANDA"; // Ganti dengan ID admin
+const telegramAdminID = "2109541199"; // Ganti dengan ID admin
 // const telegramBotID = "GANTI_DENGAN_ID_BOT_ANDA";  // Tidak diperlukan lagi
 // const telegramBotUsername = "GANTI_DENGAN_USERNAME_BOT_ANDA_TANPA_AWALAN_@"; // Tidak diperlukan
-const googleWebAppsURL = "GANTI_DENGAN_URL_WEB_APPS_ANDA"; // URL Web Apps Anda
-const googleSheetID = "GANTI_DENGAN_GOOGLE_SHEETS_ID_ANDA";   // ID Google Sheet
+const googleWebAppsURL = "URL"; // URL Web Apps Anda
+const googleSheetID = "10uM3IVAmewTIfYiUOx_YKAugjUm1HF3a9cWTYWPYcM8";   // ID Google Sheet
 const googleSheetFile = SpreadsheetApp.openById(googleSheetID);
 const googleSheetName = "DataFile"; // Nama sheet untuk menyimpan data (bisa diubah)
 
