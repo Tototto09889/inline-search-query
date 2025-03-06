@@ -1,111 +1,121 @@
 // --- Fungsi Pencarian (searchFiles) ---
+// function.gs
+
 function searchFiles(query, offset, limit = 50) {
     try {
-        Logger.log("searchFiles dijalankan!");
-        Logger.log("Query yang diterima: " + query);
-        Logger.log("Limit hasil: " + limit);
-        Logger.log("Offset: " + offset);
+        Logger.log("searchFiles - Query: " + query + ", Offset: " + offset + ", Limit: " + limit);
 
-        let sheet = SpreadsheetApp.openById(spreadsheetId).getActiveSheet();
-        let data = sheet.getDataRange().getValues();
-        Logger.log("Jumlah baris data: " + data.length);
+        let dataSheet = SpreadsheetApp.openById(spreadsheetId).getSheetByName("Data"); // Sheet data utama
+        let indexSheet = SpreadsheetApp.openById(spreadsheetId).getSheetByName("Indeks"); // Sheet indeks
 
+        let indexData = indexSheet.getDataRange().getValues();
         let results = [];
         let usedIds = {};
-
         let offsetNum = parseInt(offset, 10) || 0;
-        // Mulai iterasi dari offsetNum + 1 (karena header)
-        let startIndex = offsetNum + 1;
+        let startIndex = offsetNum;
+        let queryLower = query.toLowerCase();
+        let rowNumbers = [];
+        let explicitExtension = "";
 
-        for (let i = startIndex; i < data.length; i++) { // Mulai dari startIndex
-            let fileId = data[i][0];
-            let fileName = data[i][1];
-            let fileType = data[i][2];
-            let caption = data[i][3];
-            let messageLink = data[i][5];
+        // Cek apakah pengguna menyertakan ekstensi secara eksplisit
+        let match = queryLower.match(/\.(mp4|webm|ogg|mov|avi|mkv|3gp|3g2|mp3|aac|wav|flac|wma|pdf|docx|xlsx|pptx|txt|jpg|jpeg|png|gif)$/); // Tambahkan ekstensi lain jika perlu
+        if (match) {
+            explicitExtension = match[1]; // Ambil ekstensi (tanpa titik)
+            queryLower = queryLower.replace(/\.[^.]+$/, ""); // Hapus ekstensi dari query
+            queryLower = queryLower.trim()
+        }
 
-            // Logger.log("Memproses baris: " + (i + 1) + ", fileId: " + fileId + ", fileName: " + fileName); // Debugging (opsional)
 
+        // 1. Cari di indeks
+       for (let i = 1; i < indexData.length; i++) { // Mulai dari 1 (lewati header)
+            if (indexData[i][0].toLowerCase().includes(queryLower)) {
+               // Pisahkan string baris menjadi array angka
+                let rows = indexData[i][1].split(",").map(Number).filter(n => n > 0); // Pastikan > 0
+                rowNumbers = rowNumbers.concat(rows);
+
+            }
+        }
+
+        // Urutkan dan ambil yang unik
+        rowNumbers = [...new Set(rowNumbers.sort((a,b) => a - b))];
+
+
+
+        // 2. Ambil data dari baris yang relevan, dengan offset dan limit
+       let data = dataSheet.getDataRange().getValues();
+        for (let j = startIndex; j < rowNumbers.length && results.length < limit ; j++) {
+              let rowIndex = rowNumbers[j];
+              if(!rowIndex) continue;
+
+            let row = data[rowIndex-1];
+            if(!row) continue;
+
+            let fileId = row[0];
+            let fileName = row[1];
+            let fileType = row[2];
+            let caption = row[3];
+            let messageLink = row[5];
+
+
+            // Validasi fileId
             if (!fileId || typeof fileId !== 'string') {
-                Logger.log("WARNING: fileId tidak valid untuk baris " + (i + 1));
+                Logger.log("WARNING: fileId tidak valid untuk baris " + rowIndex);
                 continue;
             }
+
+             // Cek ekstensi (jika ada pencarian eksplisit)
+            if (explicitExtension && !fileName.toLowerCase().endsWith("." + explicitExtension)) {
+                continue; // Lewati file ini jika ekstensinya tidak cocok
+            }
+
 
             let id = fileId;
             let counter = 1;
             while (usedIds[id]) {
                 id = fileId + "_" + counter;
                 counter++;
-                Logger.log("WARNING: Duplikat fileId ditemukan. Menggunakan: " + id);
             }
             usedIds[id] = true;
             id = id.substring(0, 64);
 
-            let queryLower = query ? query.toLowerCase() : "";
-            let fileNameLower = fileName ? fileName.toLowerCase() : "";
-            let captionLower = caption ? caption.toLowerCase() : "";
 
-            if (fileNameLower.includes(queryLower) || captionLower.includes(queryLower)) {
-                // TIDAK perlu lagi melewati secara manual, kita sudah mulai dari startIndex
-                let result;
+            let finalCaption = (caption && caption.trim() !== "") ? caption + "\n\nIni dia filenya 😝" : "Ini dia filenya 😝";
+            let shortCaption = finalCaption.length > 200 ? finalCaption.substring(0, 200) + "..." : finalCaption;
+            let inlineKeyboard = [[{ text: "Cari", switch_inline_query_current_chat: "" }]];
 
-                // Buat caption akhir
-                let finalCaption;
-                if (caption && caption.trim() !== "") {
-                    finalCaption = caption + "\n\nIni dia filenya 😝";
-                } else {
-                    finalCaption = "Ini dia filenya 😝";
-                }
+            let result;
+             if (fileType == "photo") {
+                result = {
+                    type: "photo",
+                    id: id,
+                    photo_file_id: fileId,
+                    title: fileName,
+                    caption: shortCaption,
+                    parse_mode: "HTML",
+                    reply_markup: { inline_keyboard: inlineKeyboard },
+                };
+            } else if (fileType == "document" || fileType == "video" || fileType == "audio" || fileType == "animation") {
+                result = {
+                    type: "document", // Selalu gunakan "document" untuk inline query
+                    id: id,
+                    document_file_id: fileId, // Gunakan document_file_id
+                    title: fileName,
+                    caption: shortCaption,
+                    parse_mode: "HTML",
+                    reply_markup: { inline_keyboard: inlineKeyboard },
+                };
+            }
 
-                let shortCaption = finalCaption.length > 200 ? finalCaption.substring(0,200) + "..." : finalCaption;
-
-
-                // Buat keyboard inline untuk tombol "Cari"
-                let inlineKeyboard = [
-                    [{ text: "Cari", switch_inline_query_current_chat: "" }],
-                ];
-
-                if (fileType == "photo") {
-                    result = {
-                        type: "photo",
-                        id: id,
-                        photo_file_id: fileId,
-                        title: fileName,
-                        caption: shortCaption,
-                        parse_mode: "HTML",
-                        reply_markup: { inline_keyboard: inlineKeyboard },
-                    };
-                } else if (fileType == "document") {
-                    result = {
-                        type: "document",
-                        id: id,
-                        document_file_id: fileId,
-                        title: fileName,
-                        caption: shortCaption,
-                        parse_mode: "HTML",
-                        thumb_url: "",
-                        thumb_width: 50,
-                        thumb_height: 50,
-                        reply_markup: { inline_keyboard: inlineKeyboard },
-                    };
-                }
-
-                if (result) {
-                    results.push(result);
-                    if (results.length >= limit) {
-                        Logger.log("Mencapai limit. Berhenti.");
-                        break;
-                    }
-                }
+            if (result) {
+                results.push(result);
             }
         }
+        Logger.log("Hasil pencarian (searchFiles): " + JSON.stringify(results));
 
-
-        Logger.log("Hasil pencarian: " + JSON.stringify(results));
         return results;
 
     } catch (error) {
-        Logger.log("Error di searchFiles: " + error.message);
+        Logger.log("Error di searchFiles: " + error.message + ", Stack: " + error.stack);
         return [];
     }
 }
