@@ -69,7 +69,7 @@ function getChannelMessages(channelChatId, maxMessages = 50, timeLimit = 240) {
 
 // --- Fungsi untuk memproses pesan channel (dipanggil oleh trigger) ---
 function processChannelMessages() {
-    const channelId = "GANTI_DENGAN_ID_CHANNEL_ANDA";
+    const channelId = "-1001765650465";
     let fileCounter = 0;
     let result = getChannelMessages(channelId);
     let messages = result.messages;
