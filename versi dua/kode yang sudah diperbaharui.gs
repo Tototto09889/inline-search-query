@@ -1,8 +1,8 @@
-const telegramAPIToken = "GANTI_DENGAN_API_TOKEN_BOT_ANDA";
+const telegramAPIToken = "7680446501:AAFwSWuv8tdDHdpm35KEH5O-aDvWFEiqRd0";
 const telegramAPIURL = "https://api.telegram.org/bot" + telegramAPIToken;
-const telegramAdminID = "GANTI_DENGAN_ID_USER_ADMIN_BOT_ANDA";
-const googleWebAppsURL = "GANTI_DENGAN_URL_WEB_APPS_ANDA";
-const googleSheetID = "GANTI_DENGAN_GOOGLE_SHEETS_ID_ANDA";
+const telegramAdminID = "2109541199";
+const googleWebAppsURL = "GANTI";
+const googleSheetID = "10uM3IVAmewTIfYiUOx_YKAugjUm1HF3a9cWTYWPYcM8";
 const googleSheetFile = SpreadsheetApp.openById(googleSheetID);
 const googleSheetName = "DataFile";
 
