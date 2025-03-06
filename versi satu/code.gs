@@ -181,7 +181,7 @@ function saveForwardedMessage(msg) {
     try {
         let fileId, fileName, fileType, caption, uploadedBy, messageLink;
 
-        // Mendapatkan link pesan
+        // Penentuan Message Link (tidak berubah)
         if (msg.forward_from_chat && msg.forward_from_chat.username) {
             messageLink = "https://t.me/" + msg.forward_from_chat.username + "/" + msg.forward_from_message_id;
         } else if (msg.forward_from_chat) {
@@ -195,15 +195,49 @@ function saveForwardedMessage(msg) {
         uploadedBy = msg.from.id;
         caption = msg.caption ? msg.caption : "";
 
+        // Penanganan Jenis Pesan (DIMODIFIKASI)
         if (msg.photo) {
             let photo = msg.photo[msg.photo.length - 1];
             fileId = photo.file_id;
-            fileName = "photo_" + fileId + ".jpg";
+            fileName = "photo_" + fileId + ".jpg"; // Asumsikan JPG
             fileType = "photo";
         } else if (msg.document) {
             fileId = msg.document.file_id;
             fileName = msg.document.file_name;
             fileType = "document";
+        } else if (msg.video) {
+            fileId = msg.video.file_id;
+            let mimeType = msg.video.mime_type;
+
+            // Dapatkan ekstensi dari mime_type (jika nama file tidak ada)
+            let extension = getExtensionFromMimeType(mimeType);
+
+            fileName = msg.video.file_name || fileId + (extension ? "." + extension : ""); //gunakan nama file atau id + ext
+            fileType = "video";
+
+
+        } else if (msg.audio) {
+            fileId = msg.audio.file_id;
+            let mimeType = msg.audio.mime_type;
+            let extension = getExtensionFromMimeType(mimeType);
+            fileName = msg.audio.file_name || fileId + (extension ? "." + extension : "");
+            fileType = "audio";
+
+        } else if (msg.animation) {
+            fileId = msg.animation.file_id;
+            //Untuk animation, telegram sering kirim sebagai mp4.
+            fileName = msg.animation.file_name || fileId + ".mp4";
+            fileType = "animation";
+
+        } else {
+            tg.sendMessage(adminBot, "Jenis pesan ini tidak didukung untuk disimpan.");
+            return;
+        }
+
+        // Validasi nama file
+        if (!fileName) {
+            tg.sendMessage(adminBot, "Error: Nama file tidak ditemukan.");
+            return;
         }
 
         Logger.log("saveForwardedMessage - File: " + fileName + ", Type: " + fileType + ", fileId: " + fileId);
@@ -214,8 +248,36 @@ function saveForwardedMessage(msg) {
         tg.sendMessage(adminBot, `File ${fileName} tersimpan!`);
 
     } catch (error) {
-        Logger.log("Error di saveForwardedMessage: " + error.message);
-        Logger.log("Stack trace: " + error.stack);
-        tg.sendMessage(adminBot, "Error saat menyimpan file: " + error.message);
+        Logger.log("Error di saveForwardedMessage: " + error.message + ", Stack: " + error.stack);
+        tg.sendMessage(adminBot, "Error saat menyimpan file: " + error.message + "\n\nStack: " + error.stack);
     }
+}
+
+// Fungsi bantuan untuk mendapatkan ekstensi dari mime_type
+function getExtensionFromMimeType(mimeType) {
+    if (!mimeType) {
+        return "";
+    }
+
+    // Daftar mime type dan ekstensinya yang umum
+    const mimeToExtension = {
+        "video/mp4": "mp4",
+        "video/webm": "webm",
+        "video/ogg": "ogg",
+        "video/quicktime": "mov", // QuickTime
+        "video/x-msvideo": "avi",  // AVI
+        "video/x-matroska": "mkv", // MKV
+        "video/3gpp": "3gp",     // 3GP
+        "video/3gpp2": "3g2",    // 3G2
+        "audio/mpeg": "mp3",
+        "audio/aac": "aac",
+        "audio/wav": "wav",
+        "audio/ogg": "ogg",
+        "audio/webm":"webm",
+        "audio/flac": "flac",
+        "audio/x-ms-wma": "wma", // WMA
+        // Tambahkan jenis lain jika diperlukan
+    };
+
+    return mimeToExtension[mimeType] || ""; // Kembalikan ekstensi atau string kosong
 }
