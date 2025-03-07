@@ -5,7 +5,7 @@ const googleWebAppsURL = "URL"; // URL Web Apps Anda
 const googleSheetID = "10uM3IVAmewTIfYiUOx_YKAugjUm1HF3a9cWTYWPYcM8";   // ID Google Sheet
 const googleSheetFile = SpreadsheetApp.openById(googleSheetID);
 const googleSheetName = "DataFile"; // Nama sheet untuk menyimpan data
-const telegramBotUsername = "Sleazyshell_bot"; // GANTI dengan username bot Anda (TANPA @)
+const telegramBotUsername = "HelenaMcr_bot"; // GANTI dengan username bot Anda (TANPA @)
 
 // ----------------- Fungsi-fungsi Telegram API -----------------
 
