@@ -6,7 +6,7 @@ const googleWebAppsURL = "URL"; // URL Web Apps Anda
 const googleSheetID = "10uM3IVAmewTIfYiUOx_YKAugjUm1HF3a9cWTYWPYcM8";   // ID Google Sheet
 const googleSheetFile = SpreadsheetApp.openById(googleSheetID);
 const googleSheetName = "DataFile"; // Nama sheet untuk menyimpan data
-const telegramBotUsername = "Helena"; // GANTI dengan username bot Anda (TANPA @)
+const telegramBotUsername = "HelenaMcr_bot"; // GANTI dengan username bot Anda (TANPA @)
 
 // ----------------- Fungsi-fungsi Telegram API -----------------
 
@@ -167,7 +167,7 @@ function showHelp(chatId, messageId) {
 • Ketik @${telegramBotUsername} di kolom chat, diikuti dengan spasi dan kata kunci pencarian.
 • Hasil pencarian akan muncul secara otomatis.
 • Pilih file yang diinginkan dari daftar hasil.
-• Setelah memilih, bot akan mengirimkan pesan berisi detail file dan tombol untuk membagikannya.
+• Setelah memilih, bot akan mengirimkan pesan berisi detail file.
 
 <b>Perintah /start:</b>
 • Mengirimkan pesan selamat datang dengan menu utama.
@@ -236,14 +236,9 @@ function doPost(e) {
         }
 
         if (fileData) {
-            let inlineKeyboard = {
-                inline_keyboard: [
-                    [{ text: "Share File 🔁", switch_inline_query: fileData.file_name || "" }]
-                ]
-            };
-
+            // Hapus tombol share
             let messageText = `<b>Nama File:</b> ${fileData.file_name || 'Tidak Ada Nama'}\n<b>Keterangan:</b> ${fileData.caption || 'Tidak Ada Keterangan'}`;
-            kirimPesan(userId, messageText, JSON.stringify(inlineKeyboard));
+            kirimPesan(userId, messageText); // Hapus parameter reply_markup
 
         } else {
             kirimPesan(userId, "File tidak ditemukan.");
@@ -261,8 +256,7 @@ function doPost(e) {
         if (callbackData === "cari") {
             // Tidak perlu melakukan apa-apa
         } else if (callbackData === "tentang") {
-            // MODIFIKASI: Ganti keyboard saat tombol "Tentang" ditekan
-            let aboutText = "Saya adalah bot pencari file. Anda dapat mencari file yang diunggah oleh admin. Dibuat oleh [Your Name/Your Contact]."; // Tambahkan info pembuat
+            let aboutText = "Saya adalah bot helena si pencari file. Anda dapat mencari file yang diunggah oleh admin. Dibuat oleh @Rahmanaja009."; // Tambahkan info pembuat
             let aboutKeyboard = {
                 inline_keyboard: [
                     [{ text: "Kembali ke Menu Utama", callback_data: "kembali_ke_menu" }],
@@ -409,12 +403,12 @@ function doPost(e) {
             if (message.text) {
                 if (message.text.toLowerCase() === "/start") {
                     let firstName = update.message.from.first_name;
-                    let startText = `Hai ${firstName} 👋!\nAku adalah @${telegramBotUsername}\n\nDi sini kamu bisa mencari anime yang sudah terdaftar dalam databaseku.`;
+                    let startText = `Hai ${firstName} 👋!\nAku adalah @${telegramBotUsername}\n\nDi sini kamu bisa mencari file yang sudah terdaftar dalam databaseku.`;
                     kirimPesan(userId, startText, JSON.stringify(getMenuKeyboard()));
                     return;
 
-                }                 else if (message.text.toLowerCase() === "/help") {
-                    showHelp(userId);
+                } else if (message.text.toLowerCase() === "/help") {
+                                        showHelp(userId);
                     return;
                 }
             }
@@ -478,7 +472,7 @@ function doPost(e) {
             if (message.text) {
                 if (message.text.toLowerCase() === "/start") {
                     let firstName = message.from.first_name;
-                    let startText = `Hai ${firstName} 👋!\nAku adalah @${telegramBotUsername}\n\nDi sini kamu bisa mencari anime yang sudah terdaftar dalam databaseku.`;
+                    let startText = `Hai ${firstName} 👋!\nAku adalah @${telegramBotUsername}\n\nDi sini kamu bisa mencari file yang sudah terdaftar dalam databaseku.`;
                     kirimPesan(userId, startText, JSON.stringify(getMenuKeyboard()));
                     return;
                 } else if (message.text.toLowerCase() === "/help") {
