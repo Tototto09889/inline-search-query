@@ -218,7 +218,6 @@ function doPost(e) {
     if (update.chosen_inline_result) {
         let resultId = update.chosen_inline_result.result_id;
         let userId = update.chosen_inline_result.from.id;
-        let query = update.chosen_inline_result.query; // Ambil query
 
         let sheet = googleSheetFile.getSheetByName(googleSheetName);
         let data = sheet.getDataRange().getValues();
@@ -237,10 +236,9 @@ function doPost(e) {
         }
 
         if (fileData) {
-            // MODIFIKASI: Tombol Share File
             let inlineKeyboard = {
                 inline_keyboard: [
-                    [{ text: "Share File 🔁", switch_inline_query: query }]
+                    [{ text: "Share File 🔁", switch_inline_query: fileData.file_name || "" }]
                 ]
             };
 
@@ -261,11 +259,19 @@ function doPost(e) {
         let messageId = update.callback_query.message.message_id;
 
         if (callbackData === "cari") {
-            // Tidak perlu melakukan apa-apa, tombol "Cari" mengaktifkan mode inline
+            // Tidak perlu melakukan apa-apa
         } else if (callbackData === "tentang") {
-            let aboutText = "Saya adalah bot Helena si pencari file. Anda dapat mencari file yang diunggah oleh admin.";
-            editMessageText(chatId, messageId, aboutText, JSON.stringify(getMenuKeyboard()));
+            // MODIFIKASI: Ganti keyboard saat tombol "Tentang" ditekan
+            let aboutText = "Saya adalah bot pencari file. Anda dapat mencari file yang diunggah oleh admin. Dibuat oleh [Your Name/Your Contact]."; // Tambahkan info pembuat
+            let aboutKeyboard = {
+                inline_keyboard: [
+                    [{ text: "Kembali ke Menu Utama", callback_data: "kembali_ke_menu" }],
+                    [{ text: "Tutup", callback_data: "tutup" }]
+                ]
+            };
+            editMessageText(chatId, messageId, aboutText, JSON.stringify(aboutKeyboard));
             answerCallbackQuery(update.callback_query.id);
+
         } else if (callbackData === "indeks") {
             showIndexPage(chatId, messageId, 1);
             answerCallbackQuery(update.callback_query.id);
@@ -274,7 +280,7 @@ function doPost(e) {
             showIndexPage(chatId, messageId, pageNumber);
             answerCallbackQuery(update.callback_query.id);
         } else if (callbackData === "kembali_ke_menu") {
-            let menuText = `Hai ${update.callback_query.from.first_name} 👋!\nAku adalah ${telegramBotUsername}\n\nDi sini kamu bisa mencari anime yang sudah terdaftar dalam databaseku.`;
+            let menuText = `Hai ${update.callback_query.from.first_name} 👋!\nAku adalah @${telegramBotUsername}\n\nDi sini kamu bisa mencari anime yang sudah terdaftar dalam databaseku.`;
             editMessageText(chatId, messageId, menuText, JSON.stringify(getMenuKeyboard()));
             answerCallbackQuery(update.callback_query.id);
         } else if (callbackData === "help") {
@@ -316,7 +322,7 @@ function doPost(e) {
                         id: String(i),
                         title: rowData.file_name || "File",
                         document_file_id: fileId,
-                        caption: `Nama File: ${rowData.file_name || 'Tidak Ada Nama'}\nKeterangan: ${rowData.caption || 'Tidak Ada Keterangan'}\nDiunggah oleh: @${rowData.username || 'Tidak Diketahui'}\nTimestamp: ${rowData.timestamp || 'Tidak Diketahui'}`
+                        caption: `Nama File: ${rowData.file_name || 'Tidak Ada Nama'}\nKeterangan: ${rowData.caption || 'Tidak Ada Keterangan'}`
                     };
                     results.push(result);
                 }
@@ -356,7 +362,7 @@ function doPost(e) {
                             id: String(offset + results.length + 1),
                             title: rowData.file_name || "File",
                             document_file_id: fileId,
-                            caption: `Nama File: ${rowData.file_name || 'Tidak Ada Nama'}\nKeterangan: ${rowData.caption || 'Tidak Ada Keterangan'}\nDiunggah oleh: @${rowData.username || 'Tidak Diketahui'}\nTimestamp: ${rowData.timestamp || 'Tidak Diketahui'}`
+                            caption: `Nama File: ${rowData.file_name || 'Tidak Ada Nama'}\nKeterangan: ${rowData.caption || 'Tidak Ada Keterangan'}`
                         };
                         results.push(result);
                     }
@@ -403,11 +409,11 @@ function doPost(e) {
             if (message.text) {
                 if (message.text.toLowerCase() === "/start") {
                     let firstName = update.message.from.first_name;
-                    let startText = `Hai ${firstName} 👋!\nAku adalah ${telegramBotUsername}\n\nDi sini kamu bisa mencari anime yang sudah terdaftar dalam databaseku.`;
+                    let startText = `Hai ${firstName} 👋!\nAku adalah @${telegramBotUsername}\n\nDi sini kamu bisa mencari anime yang sudah terdaftar dalam databaseku.`;
                     kirimPesan(userId, startText, JSON.stringify(getMenuKeyboard()));
                     return;
 
-                                } else if (message.text.toLowerCase() === "/help") {
+                }                 else if (message.text.toLowerCase() === "/help") {
                     showHelp(userId);
                     return;
                 }
@@ -458,7 +464,7 @@ function doPost(e) {
                 dataToStore.file_name = fileName;
 
                 let resultMessage = simpanSheets(dataToStore);
-                resultMessage = `File '${fileName || 'Tidak Ada Nama'}' berhasil disimpan ✅`; // Format pesan
+                resultMessage = `File '${fileName || 'Tidak Ada Nama'}' berhasil disimpan ✅`;
                 kirimPesan(telegramAdminID, resultMessage);
                 return;
 
@@ -472,7 +478,7 @@ function doPost(e) {
             if (message.text) {
                 if (message.text.toLowerCase() === "/start") {
                     let firstName = message.from.first_name;
-                    let startText = `Hai ${firstName} 👋!\nAku adalah ${telegramBotUsername}\n\nDi sini kamu bisa mencari anime yang sudah terdaftar dalam databaseku.`;
+                    let startText = `Hai ${firstName} 👋!\nAku adalah @${telegramBotUsername}\n\nDi sini kamu bisa mencari anime yang sudah terdaftar dalam databaseku.`;
                     kirimPesan(userId, startText, JSON.stringify(getMenuKeyboard()));
                     return;
                 } else if (message.text.toLowerCase() === "/help") {
@@ -484,3 +490,4 @@ function doPost(e) {
         }
     }
 }
+
